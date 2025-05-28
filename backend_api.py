@@ -7,13 +7,12 @@ from typing import List, Dict
 from typing import Literal
 
 from fastapi import FastAPI
+from lightrag import QueryParam, LightRAG
 from pydantic import BaseModel
 
 from config import settings
-from lightrag import QueryParam, LightRAG
 from rag_engine import initialize_rag, SYSTEM_PROMPT_FOR_MENO, QUERY_MAX_TOKENS, TOP_K, resolve_anaphora, \
-    explain_abbreviations, URLS_FNAME
-from reference_searcher import ReferenceSearcher
+    explain_abbreviations
 
 QUERY_MODE: Literal["local", "global", "hybrid", "naive", "mix"] = "naive"
 
@@ -29,9 +28,8 @@ dialogue_histories: Dict[str, List[Dict[str, str]]] = defaultdict(list)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global rag_instance, abbreviations, ref_searcher
+    global rag_instance, abbreviations
     rag_instance = await initialize_rag()
-    ref_searcher = ReferenceSearcher(URLS_FNAME, model_name='all-MiniLM-L6-v2', threshold=0.75)
     try:
         with codecs.open(settings.abbreviations_file, mode='r', encoding='utf-8') as fp:
             abbreviations = json.load(fp)
@@ -99,7 +97,7 @@ async def chat(request: ChatRequest):
             ),
             system_prompt=SYSTEM_PROMPT_FOR_MENO
         )
-        answer = ref_searcher.replace_references(response_text)
+        answer = response_text
         dialogue_histories[chat_id].append({"role": "user", "content": query})
         dialogue_histories[chat_id].append({"role": "assistant", "content": answer})
         logger.info(f"Ответ сформирован для {chat_id}: {answer}")
