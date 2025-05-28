@@ -1,1 +1,1 @@
-nohup uvicorn backend_api:app --host 127.0.0.1 --port 8888 > backend.log 2>&1 &
+nohup uvicorn backend_api:app --host 127.0.0.1 --port 8889 > backend.log 2>&1 &
